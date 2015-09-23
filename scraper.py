@@ -242,7 +242,7 @@ def main():
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'}
 
     # set up params (page number)
-    page_num = 1
+    page_num = 10
     params = {'page_id': page_num}
 
     output = open(DATASET_FILE, 'a')
@@ -252,7 +252,7 @@ def main():
         # try:
         params = {'page_id': page_num}
         r = requests.get(INIT_URL, params=params, cookies=cookies, headers=headers)
-        page_num += 10
+        page_num += 1
 
         print('Processing: ' + r.url)
 
