@@ -183,8 +183,12 @@ def scrape_single_question(html):
     #     f.write(html)
 
     # question date
-    last_asked = soup.find('div', class_='QuestionLastActivityTime').text
-    date_asked = normalize_date(last_asked, 'Last asked: ')
+    last_asked = soup.find('div', class_='QuestionLastActivityTime')
+    if not last_asked:
+        date_asked = today
+    else:
+        last_asked = last_asked.text
+        date_asked = normalize_date(last_asked, 'Last asked: ')
 
     # we don't process questions asked less than 2 weeks ago.
     if abs((today - date_asked).days) < DAYS_OLD:
