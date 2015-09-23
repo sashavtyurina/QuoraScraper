@@ -179,57 +179,59 @@ def scrape_single_question(html):
     q_json = {}
     today = datetime.date.today()
 
-    # with open('test_single_q.html', 'w') as f:
-    #     f.write(html)
-
-    # question date
-    last_asked = soup.find('div', class_='QuestionLastActivityTime')
-    if not last_asked:
-        date_asked = today
-    else:
-        last_asked = last_asked.text
-        date_asked = normalize_date(last_asked, 'Last asked: ')
-
-    # we don't process questions asked less than 2 weeks ago.
-    if abs((today - date_asked).days) < DAYS_OLD:
-        return None
-
-    q_date = str(date_asked)
-
-    body = soup.find('span', id=re.compile('full_text_content')).text
-
-    q_json[DATE_COLLECTED] = str(today)
-    q_json[QUESTION_DATE] = q_date
-    q_json[QUESTION_BODY] = body
-
-    # related questions
-    related_list = soup.find('div', class_='question_related list').ul.find_all('li', class_='related_question')
-    related_questions = []
-    for rel_q in related_list:
-        rel_href = rel_q.div.div.a['href']
-        related_questions.append('https://www.quora.com' + rel_href)
-    q_json[RELATED_QUESTIONS] = related_questions
-
-
-    q_json[ANSWERS] = []
-    # find answers
-    answer_divs = soup.find('div', class_='AnswerPagedList PagedList').find_all('div', class_='pagedlist_item')
-    for a_div in answer_divs[:-1]:
-        answer = {}
-        a_date = a_div.find('div', class_='ContentFooter AnswerFooter').span.a.text
-        if a_date.starts_with('Written'):
-            a_date = str(normalize_date(a_date, 'Written '))
+    try:
+        # question date
+        last_asked = soup.find('div', class_='QuestionLastActivityTime')
+        if not last_asked:
+            date_asked = today
         else:
-            a_date = str(normalize_date(a_date, 'Updated '))
+            last_asked = last_asked.text
+            date_asked = normalize_date(last_asked, 'Last asked: ')
 
-        a_upvotes = a_div.find('div', class_='Answer ActionBar ClsWithPageLocations').contents[0].a.contents[1].text
-        a_text = a_div.find(id=re.compile('container')).text
+        # we don't process questions asked less than 2 weeks ago.
+        if abs((today - date_asked).days) < DAYS_OLD:
+            print('The question was asked later than a week ago.')
+            return None
 
-        answer[ANSWER_DATE] = a_date
-        answer[ANSWER_TEXT] = a_text
-        answer[ANSWER_UPVOTES] = a_upvotes
+        q_date = str(date_asked)
 
-        q_json[ANSWERS].append(answer)
+        body = soup.find('span', id=re.compile('full_text_content')).text
+
+        q_json[DATE_COLLECTED] = str(today)
+        q_json[QUESTION_DATE] = q_date
+        q_json[QUESTION_BODY] = body
+
+        # related questions
+        related_list = soup.find('div', class_='question_related list').ul.find_all('li', class_='related_question')
+        related_questions = []
+        for rel_q in related_list:
+            rel_href = rel_q.div.div.a['href']
+            related_questions.append('https://www.quora.com' + rel_href)
+        q_json[RELATED_QUESTIONS] = related_questions
+
+        q_json[ANSWERS] = []
+        # find answers
+        answer_divs = soup.find('div', class_='AnswerPagedList PagedList').find_all('div', class_='pagedlist_item')
+        for a_div in answer_divs[:-1]:
+            answer = {}
+            a_date = a_div.find('div', class_='ContentFooter AnswerFooter').span.a.text
+            if a_date.starts_with('Written'):
+                a_date = str(normalize_date(a_date, 'Written '))
+            else:
+                a_date = str(normalize_date(a_date, 'Updated '))
+
+            a_upvotes = a_div.find('div', class_='Answer ActionBar ClsWithPageLocations').contents[0].a.contents[1].text
+            a_text = a_div.find(id=re.compile('container')).text
+
+            answer[ANSWER_DATE] = a_date
+            answer[ANSWER_TEXT] = a_text
+            answer[ANSWER_UPVOTES] = a_upvotes
+
+            q_json[ANSWERS].append(answer)
+    except AttributeError as er:
+        print(er.__traceback__)
+        print(er.__cause__)
+        return None
 
     return q_json
 
@@ -270,7 +272,6 @@ def main():
             question = scrape_single_question(q_html)
 
             if not question:
-                print('The question was asked laer than a week ago.')
                 # add idle time to reduce chances of getting blocked
                 sl = random.randrange(10, 30)
                 print('Sleeping for %d seconds' % sl)
@@ -287,10 +288,6 @@ def main():
             sl = random.randrange(30, 90)
             print('Sleeping for %d seconds' % sl)
             time.sleep(sl)
-
-
-        # except:
-        #     print('Something went wrong. Wrapping up.')
 
     output.close()
 
