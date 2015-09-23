@@ -188,7 +188,10 @@ def scrape_single_question(html):
         date_asked = today
     else:
         last_asked = last_asked.text
-        date_asked = normalize_date(last_asked, 'Last asked: ')
+        if last_asked.starts_with('Updated'):
+            date_asked = normalize_date(last_asked, 'Updated ')
+        else:
+            date_asked = normalize_date(last_asked, 'Last asked: ')
 
     # we don't process questions asked less than 2 weeks ago.
     if abs((today - date_asked).days) < DAYS_OLD:
