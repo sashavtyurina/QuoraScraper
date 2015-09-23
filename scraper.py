@@ -252,7 +252,7 @@ def main():
         # try:
         params = {'page_id': page_num}
         r = requests.get(INIT_URL, params=params, cookies=cookies, headers=headers)
-        page_num += 1
+        page_num += 10
 
         print('Processing: ' + r.url)
 
