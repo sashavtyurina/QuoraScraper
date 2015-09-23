@@ -57,6 +57,12 @@ COOKIES = 'cookies.txt'
 CREDENTIALS = 'credentials.txt'
 INIT_URL = 'https://www.quora.com/sitemap/questions'
 DATASET_FILE = 'quoradataset.txt'
+NEW_QUESTIONS_DATASET = 'new_questions.txt'
+
+NEW_QUESTION = 'NEW'
+OTHER_ERROR = 'ERROR'
+SUCCESS = 'SUCCESS'
+SUCCES_CODE = [NEW_QUESTION, OTHER_ERROR, SUCCESS]
 
 QUESTION_HREF = 'href'
 QUESTION_TITLE = 'qtitle'
@@ -190,8 +196,8 @@ def scrape_single_question(html):
 
         # we don't process questions asked less than 2 weeks ago.
         if abs((today - date_asked).days) < DAYS_OLD:
-            print('The question was asked later than a week ago.')
-            return None
+            print('The question was asked less than a week ago.')
+            return None, NEW_QUESTION
 
         q_date = str(date_asked)
 
@@ -231,9 +237,9 @@ def scrape_single_question(html):
     except AttributeError as er:
         print(er.__traceback__)
         print(er.__cause__)
-        return None
+        return None, OTHER_ERROR
 
-    return q_json
+    return q_json, SUCCESS
 
 def main():
 
@@ -248,6 +254,8 @@ def main():
     params = {'page_id': page_num}
 
     output = open(DATASET_FILE, 'a')
+
+    new_questions_dataset = open(NEW_QUESTIONS_DATASET, 'a')
 
     while True:
 
@@ -269,9 +277,11 @@ def main():
 
             print('Scraping question: ' + q[QUESTION_HREF])
             q_html = requests.get(q[QUESTION_HREF], cookies=cookies, headers=headers).text
-            question = scrape_single_question(q_html)
+            question, success = scrape_single_question(q_html)
 
             if not question:
+                if success is NEW_QUESTION:
+                    new_questions_dataset.write('%s\n' % q[QUESTION_HREF])
                 # add idle time to reduce chances of getting blocked
                 sl = random.randrange(10, 30)
                 print('Sleeping for %d seconds' % sl)
