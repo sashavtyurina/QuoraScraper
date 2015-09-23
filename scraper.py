@@ -188,10 +188,7 @@ def scrape_single_question(html):
         date_asked = today
     else:
         last_asked = last_asked.text
-        if last_asked.starts_with('Updated'):
-            date_asked = normalize_date(last_asked, 'Updated ')
-        else:
-            date_asked = normalize_date(last_asked, 'Last asked: ')
+        date_asked = normalize_date(last_asked, 'Last asked: ')
 
     # we don't process questions asked less than 2 weeks ago.
     if abs((today - date_asked).days) < DAYS_OLD:
@@ -220,7 +217,10 @@ def scrape_single_question(html):
     for a_div in answer_divs[:-1]:
         answer = {}
         a_date = a_div.find('div', class_='ContentFooter AnswerFooter').span.a.text
-        a_date = str(normalize_date(a_date, 'Written '))
+        if a_date.starts_with('Written'):
+            a_date = str(normalize_date(a_date, 'Written '))
+        else:
+            a_date = str(normalize_date(a_date, 'Updated '))
 
         a_upvotes = a_div.find('div', class_='Answer ActionBar ClsWithPageLocations').contents[0].a.contents[1].text
         a_text = a_div.find(id=re.compile('container')).text
