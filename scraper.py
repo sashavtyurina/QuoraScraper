@@ -27,37 +27,22 @@ from datetime import timedelta
 import random
 import time
 
-# we don't use it anymore. Keep ot for the time being.
-# # for dynamic scraping
-# from PyQt4.QtGui import *
-# from PyQt4.QtCore import *
-# from PyQt4.QtWebKit import *
+# for dynamic scraping
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtWebKit import *
+from PyQt4.QtNetwork import *
 #
 #
-# # This class is coming from
-# # https://impythonist.wordpress.com/2015/01/06/ultimate-guide-for-scraping-javascript-rendered-web-pages/
-# class Render(QWebPage):
-#   def __init__(self, url):
-#     self.app = QApplication(sys.argv)
-#     QWebPage.__init__(self)
-#     self.loadFinished.connect(self._loadFinished)
-#     self.mainFrame().load(QUrl(url))
-#     self.app.exec_()
-#
-#   def _loadFinished(self, result):
-#     self.frame = self.mainFrame()
-#     self.app.quit()
-#
-# r = Render(url)
-# page = r.frame.toHtml()
-# with open('dyn.html', 'w') as ff:
-#   ff.write(page)
+
+
 
 COOKIES = 'cookies.txt'
 CREDENTIALS = 'credentials.txt'
 INIT_URL = 'https://www.quora.com/sitemap/questions'
 DATASET_FILE = 'quoradataset.txt'
 NEW_QUESTIONS_DATASET = 'new_questions.txt'
+LOG_FILE = open('log.txt', 'a')
 
 NEW_QUESTION = 'NEW'
 OTHER_ERROR = 'ERROR'
@@ -82,6 +67,42 @@ DATE_COLLECTED = 'date_collctd'
 DAYS_OLD = 7
 
 DAYS_OF_WEEK = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
+
+# load cookies to enable logged in session
+cookies = json.loads(open(COOKIES).read())
+
+# # This class is coming from
+# # https://impythonist.wordpress.com/2015/01/06/ultimate-guide-for-scraping-javascript-rendered-web-pages/
+class Render(QWebPage):
+  def __init__(self, url):
+    self.app = QApplication(sys.argv)
+    QWebPage.__init__(self)
+
+
+    # list of QNetworkCookie
+    self.networkcookies = []
+    for cookie_name in cookies.keys():
+        cookie = QNetworkCookie(name=QByteArray(cookie_name), value=QByteArray(cookies[cookie_name]))
+        self.networkcookies.append(cookie)
+
+    # cookiejar
+    self.cookieJar = QNetworkCookieJar()
+    self.cookieJar.setAllCookies(self.networkcookies)
+
+    # manager
+    self.manager = QNetworkAccessManager()
+    self.manager.setCookieJar(self.cookieJar)
+
+    # QWebPage.setNetworkAccessManager(self.manager)
+    self.setNetworkAccessManager(self.manager)
+
+    self.loadFinished.connect(self._loadFinished)
+    self.mainFrame().load(QUrl(url))
+    self.app.exec_()
+
+  def _loadFinished(self, result):
+    self.frame = self.mainFrame()
+    self.app.quit()
 
 def scrape_page(soup):
     '''
@@ -221,7 +242,7 @@ def scrape_single_question(html):
         for a_div in answer_divs[:-1]:
             answer = {}
             a_date = a_div.find('div', class_='ContentFooter AnswerFooter').span.a.text
-            if a_date.starts_with('Written'):
+            if a_date.startswith('Written'):
                 a_date = str(normalize_date(a_date, 'Written '))
             else:
                 a_date = str(normalize_date(a_date, 'Updated '))
@@ -235,6 +256,7 @@ def scrape_single_question(html):
 
             q_json[ANSWERS].append(answer)
     except AttributeError as er:
+        print("ERROR!")
         print(er.__traceback__)
         print(er.__cause__)
         return None, OTHER_ERROR
@@ -243,14 +265,15 @@ def scrape_single_question(html):
 
 def main():
 
-    # load cookies to enable logged in session
-    cookies = json.loads(open(COOKIES).read())
+
 
     # imitating browser session to ensure same-origin policy
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'}
 
     # set up params (page number)
-    page_num = 10
+    page_num = 49
+
+
     params = {'page_id': page_num}
 
     output = open(DATASET_FILE, 'a')
@@ -261,10 +284,13 @@ def main():
 
         # try:
         params = {'page_id': page_num}
+        LOG_FILE.write('Starting to scrape page %d' % page_num )
+
         r = requests.get(INIT_URL, params=params, cookies=cookies, headers=headers)
         page_num += 1
 
         print('Processing: ' + r.url)
+        LOG_FILE.write('Processing: ' + r.url)
 
         # get a list of questions
         questions = scrape_questions_list(r.text)
@@ -276,17 +302,31 @@ def main():
         for q in questions:
 
             print('Scraping question: ' + q[QUESTION_HREF])
+            LOG_FILE.write('Scraping question: ' + q[QUESTION_HREF])
+
+            # r = Render(q[QUESTION_HREF])
+            # q_html_js = r.frame.toHtml()
+            # with open('dyn.html', 'w') as ff:
+            #   ff.write(page)
+
             q_html = requests.get(q[QUESTION_HREF], cookies=cookies, headers=headers).text
             question, success = scrape_single_question(q_html)
+            print('Success = %s' % success)
+            LOG_FILE.write('Success = %s' % success)
 
             if not question:
                 if success is NEW_QUESTION:
+                    print('That was a new question. Saving its URL')
+                    LOG_FILE.write('That was a new question. Saving its URL')
+
                     new_questions_dataset.write('%s\n' % q[QUESTION_HREF])
                 # add idle time to reduce chances of getting blocked
                 sl = random.randrange(10, 30)
                 print('Sleeping for %d seconds' % sl)
+                LOG_FILE.write('Sleeping for %d seconds' % sl)
                 time.sleep(sl)
 
+                print('Continuing')
                 continue
 
             question[QUESTION_TITLE] = q[QUESTION_TITLE]
