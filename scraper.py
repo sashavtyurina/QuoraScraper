@@ -28,10 +28,10 @@ import random
 import time
 
 # for dynamic scraping
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4.QtWebKit import *
-from PyQt4.QtNetwork import *
+# from PyQt4.QtGui import *
+# from PyQt4.QtCore import *
+# from PyQt4.QtWebKit import *
+# from PyQt4.QtNetwork import *
 #
 #
 
@@ -73,36 +73,36 @@ cookies = json.loads(open(COOKIES).read())
 
 # # This class is coming from
 # # https://impythonist.wordpress.com/2015/01/06/ultimate-guide-for-scraping-javascript-rendered-web-pages/
-class Render(QWebPage):
-  def __init__(self, url):
-    self.app = QApplication(sys.argv)
-    QWebPage.__init__(self)
-
-
-    # list of QNetworkCookie
-    self.networkcookies = []
-    for cookie_name in cookies.keys():
-        cookie = QNetworkCookie(name=QByteArray(cookie_name), value=QByteArray(cookies[cookie_name]))
-        self.networkcookies.append(cookie)
-
-    # cookiejar
-    self.cookieJar = QNetworkCookieJar()
-    self.cookieJar.setAllCookies(self.networkcookies)
-
-    # manager
-    self.manager = QNetworkAccessManager()
-    self.manager.setCookieJar(self.cookieJar)
-
-    # QWebPage.setNetworkAccessManager(self.manager)
-    self.setNetworkAccessManager(self.manager)
-
-    self.loadFinished.connect(self._loadFinished)
-    self.mainFrame().load(QUrl(url))
-    self.app.exec_()
-
-  def _loadFinished(self, result):
-    self.frame = self.mainFrame()
-    self.app.quit()
+# class Render(QWebPage):
+#   def __init__(self, url):
+#     self.app = QApplication(sys.argv)
+#     QWebPage.__init__(self)
+#
+#
+#     # list of QNetworkCookie
+#     self.networkcookies = []
+#     for cookie_name in cookies.keys():
+#         cookie = QNetworkCookie(name=QByteArray(cookie_name), value=QByteArray(cookies[cookie_name]))
+#         self.networkcookies.append(cookie)
+#
+#     # cookiejar
+#     self.cookieJar = QNetworkCookieJar()
+#     self.cookieJar.setAllCookies(self.networkcookies)
+#
+#     # manager
+#     self.manager = QNetworkAccessManager()
+#     self.manager.setCookieJar(self.cookieJar)
+#
+#     # QWebPage.setNetworkAccessManager(self.manager)
+#     self.setNetworkAccessManager(self.manager)
+#
+#     self.loadFinished.connect(self._loadFinished)
+#     self.mainFrame().load(QUrl(url))
+#     self.app.exec_()
+#
+#   def _loadFinished(self, result):
+#     self.frame = self.mainFrame()
+#     self.app.quit()
 
 def scrape_page(soup):
     '''
