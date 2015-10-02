@@ -142,8 +142,11 @@ def normalize_date(date_str, delim):
     date_str = ''.join(date_str.split(delim))
 
     date_asked = None
+
+    # 2am
+    timeonly = re.match('[0-9]{1,2}[a,p]m}', date_str)
     ago = re.match('[0-9]{1,2}[mh] ago$', date_str)
-    if ago:
+    if ago or timeonly:
         date_asked = today
 
     dow = date_str in list(DAYS_OF_WEEK.keys())
