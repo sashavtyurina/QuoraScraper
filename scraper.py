@@ -289,13 +289,13 @@ def main():
 
         # try:
         params = {'page_id': page_num}
-        LOG_FILE.write('Starting to scrape page %d' % page_num )
+        LOG_FILE.write('Starting to scrape page %d\n' % page_num )
 
         r = requests.get(INIT_URL, params=params, cookies=cookies, headers=headers)
         page_num += 1
 
         print('Processing: ' + r.url)
-        LOG_FILE.write('Processing: ' + r.url)
+        LOG_FILE.write('Processing: ' + r.url + '\n')
 
         # get a list of questions
         questions = scrape_questions_list(r.text)
@@ -307,7 +307,7 @@ def main():
         for q in questions:
 
             print('Scraping question: ' + q[QUESTION_HREF])
-            LOG_FILE.write('Scraping question: ' + q[QUESTION_HREF])
+            LOG_FILE.write('Scraping question: ' + q[QUESTION_HREF] + '\n')
 
             # r = Render(q[QUESTION_HREF])
             # q_html_js = r.frame.toHtml()
@@ -320,18 +320,18 @@ def main():
 
             question, success = scrape_single_question(q_html)
             print('Success = %s' % success)
-            LOG_FILE.write('Success = %s' % success)
+            LOG_FILE.write('Success = %s\n' % success)
 
             if not question:
                 if success is NEW_QUESTION:
                     print('That was a new question. Saving its URL')
-                    LOG_FILE.write('That was a new question. Saving its URL')
+                    LOG_FILE.write('That was a new question. Saving its URL\n')
 
                     new_questions_dataset.write('%s\n' % q[QUESTION_HREF])
                 # add idle time to reduce chances of getting blocked
                 sl = random.randrange(10, 30)
                 print('Sleeping for %d seconds' % sl)
-                LOG_FILE.write('Sleeping for %d seconds' % sl)
+                LOG_FILE.write('Sleeping for %d seconds\n' % sl)
                 time.sleep(sl)
 
                 print('Continuing')
