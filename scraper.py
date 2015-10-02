@@ -250,7 +250,7 @@ def scrape_single_question(html):
             else:
                 a_date = str(normalize_date(a_date, 'Updated '))
 
-            a_upvotes = a_div.find('div', class_='Answer ActionBar ClsWithPageLocations').contents[0].a.contents[1].text
+            a_upvotes = a_div.find('div', class_='Answer ActionBar').contents[0].a.contents[1].text
             a_text = a_div.find(id=re.compile('container')).text
 
             answer[ANSWER_DATE] = a_date
