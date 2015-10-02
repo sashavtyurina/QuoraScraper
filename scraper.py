@@ -259,9 +259,11 @@ def scrape_single_question(html):
 
             q_json[ANSWERS].append(answer)
     except AttributeError as er:
-        print("ERROR!")
-        print(er.__traceback__)
-        print(er.__cause__)
+        print("Attribure error: {0}".format(er))
+        print(sys.exc_info()[0])
+        # print("ERROR!")
+        # print(er.__traceback__)
+        # print(er.__cause__)
         return None, OTHER_ERROR
 
     return q_json, SUCCESS
