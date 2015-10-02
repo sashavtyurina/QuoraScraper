@@ -315,6 +315,9 @@ def main():
             #   ff.write(page)
 
             q_html = requests.get(q[QUESTION_HREF], cookies=cookies, headers=headers).text
+            with open('test.html', 'w') as test:
+                test.write(q_html)
+
             question, success = scrape_single_question(q_html)
             print('Success = %s' % success)
             LOG_FILE.write('Success = %s' % success)
