@@ -159,7 +159,7 @@ def normalize_date(date_str, delim):
 
         date_asked = today - timedelta(diff)
 
-    if not (ago or dow):
+    if not (ago or dow or timeonly):
         try:
             date_asked = datetime.datetime.strptime(date_str, '%d %b, %Y').date()
         except ValueError:
