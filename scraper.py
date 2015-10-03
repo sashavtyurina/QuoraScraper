@@ -140,7 +140,7 @@ def normalize_date(date_str, delim):
     today = datetime.date.today()
     today.weekday()
     date_str = ''.join(date_str.split(delim))
-
+    print('date_str = ' + date_str)
     date_asked = None
 
     # 2am
@@ -148,6 +148,8 @@ def normalize_date(date_str, delim):
     ago = re.match('[0-9]{1,2}[mh] ago$', date_str)
     if ago or timeonly:
         date_asked = today
+        return date_asked
+
 
     dow = date_str in list(DAYS_OF_WEEK.keys())
     if dow:
@@ -158,6 +160,7 @@ def normalize_date(date_str, delim):
             diff = today.weekday() - DAYS_OF_WEEK[date_str]
 
         date_asked = today - timedelta(diff)
+        return date_asked
 
     if not (ago or dow or timeonly):
         try:
