@@ -144,7 +144,7 @@ def normalize_date(date_str, delim):
     date_asked = None
 
     # 2am
-    timeonly = re.match('[0-9]{1,2}[a,p]m}', date_str)
+    timeonly = re.match('[0-9]{1,2}[a,p]m', date_str)
     ago = re.match('[0-9]{1,2}[mh] ago$', date_str)
     if ago or timeonly:
         date_asked = today
